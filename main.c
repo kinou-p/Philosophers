@@ -33,7 +33,17 @@ s_arg	*create_data(int argc, char **argv)
 
 void	put_event(s_philo philo, char *event)
 {
-	printf("%.4ldms Philo N°%d %s\n", get_time() - philo.data->time_start, philo.philo_id, event);
+	printf("%ldms Philo N°%d %s\n", get_time() - philo.data->time_start, philo.philo_id, event);
+}
+
+void	philo_take_fork(s_philo *philo_tmp)
+{
+
+}
+
+void	philo_sleep_think(s_philo *philo_tmp)
+{
+
 }
 
 void	philo_eat(s_philo *philo_tmp)
@@ -42,19 +52,25 @@ void	philo_eat(s_philo *philo_tmp)
 
 	philo = *philo_tmp;
 	pthread_mutex_lock(philo.right_fork);
-	put_event(philo, "has taken a fork");
 	pthread_mutex_lock(philo.left_fork);
+		pthread_mutex_lock(philo.display);
 	put_event(philo, "has taken a fork");
-	printf("old last eat of --%d-- = %ld\n", philo.philo_id, *philo_tmp->last_eat - philo.data->time_start);
+	put_event(philo, "has taken a fork");
+		pthread_mutex_unlock(philo.display);
+	pthread_mutex_lock(philo.display);
 	*philo_tmp->last_eat = get_time();
-	printf("last eat of --%d-- = %ld\n", philo.philo_id, *philo_tmp->last_eat - philo.data->time_start);
 	put_event(philo, "is eating");
+	pthread_mutex_unlock(philo.display);
 	usleep(philo.data->time_to_eat * 1000);
 	pthread_mutex_unlock(philo.right_fork);
 	pthread_mutex_unlock(philo.left_fork);
+		pthread_mutex_lock(philo.display);
 	put_event(philo, "is sleeping");
+		pthread_mutex_unlock(philo.display);
 	usleep(philo.data->time_to_sleep * 1000);
+		pthread_mutex_lock(philo.display);
 	put_event(philo, "is thinking");
+		pthread_mutex_unlock(philo.display);
 }
 
 void	*death_check(void *tmp)
@@ -66,8 +82,9 @@ void	*death_check(void *tmp)
 	{
 		if (get_time() - *philo->last_eat > philo->data->time_to_die)
 		{
-			printf("PHILO IS DEAD last eat: %ld--  ", *philo->last_eat - philo->data->time_start);
-			put_event(*philo, "PHILO IS DEAD\n\n\n--\n");
+			//printf("PHILO IS DEAD last eat: %ld--  ", *philo->last_eat - philo->data->time_start);
+			pthread_mutex_lock(philo->display);
+			put_event(*philo, "died");
 			exit(1);
 		}
 	}
@@ -89,6 +106,8 @@ void	*routine(void *tmp)
 		philo_eat(philo);
 		philo->must_eat--;
 	}
+	if (!philo->must_eat)
+		printf("philo n%d is full\n", philo->philo_id);
 	return (0); 
 }
 
@@ -96,13 +115,19 @@ s_philo *create_philo(s_arg *data)
 {
 	int i;
 	s_philo *philo;
+	pthread_mutex_t	*display;
 
 	i = 0;
 	philo = malloc(sizeof(s_philo) * data->nb_philo);
 	if (!philo)
 		return (0);
+	display = malloc(sizeof(pthread_mutex_t));
+	if (!display)
+		return (0);
+	pthread_mutex_init(display, 0);
 	while (i < data->nb_philo)
 	{
+		philo[i].display = display;
 		philo[i].philo_id = i + 1;
 		philo[i].data = data;
 		philo[i].must_eat = data->must_eat;

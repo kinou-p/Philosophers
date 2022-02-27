@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+
 typedef struct s_list
 {
 	int				nb_philo;
@@ -36,6 +37,7 @@ typedef struct t_list
 	long			last_eat[1];
 	pthread_mutex_t	*right_fork;
 	pthread_mutex_t	*left_fork;
+	pthread_mutex_t	*display;
 
 }				s_philo;
 
