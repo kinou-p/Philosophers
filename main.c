@@ -33,17 +33,18 @@ s_arg	*create_data(int argc, char **argv)
 
 void	put_event(s_philo philo, char *event)
 {
-	printf("%ldms Philo N°%d %s\n", get_time() - philo.data->time_start, philo.philo_id, event);
+	pthread_mutex_lock(philo.display);
+	if (*philo.data->death)
+		printf("%ldms Philo N°%d %s\n", get_time() - philo.data->time_start, philo.philo_id, event);
+	pthread_mutex_unlock(philo.display);
 }
 
-void	philo_take_fork(s_philo *philo_tmp)
+void	philo_take_fork(s_philo philo)
 {
-
-}
-
-void	philo_sleep_think(s_philo *philo_tmp)
-{
-
+	pthread_mutex_lock(philo.right_fork);
+	put_event(philo, "has taken a fork");
+	pthread_mutex_lock(philo.left_fork);	
+	put_event(philo, "has taken a fork");
 }
 
 void	philo_eat(s_philo *philo_tmp)
@@ -51,26 +52,15 @@ void	philo_eat(s_philo *philo_tmp)
 	s_philo philo;
 
 	philo = *philo_tmp;
-	pthread_mutex_lock(philo.right_fork);
-	pthread_mutex_lock(philo.left_fork);
-		pthread_mutex_lock(philo.display);
-	put_event(philo, "has taken a fork");
-	put_event(philo, "has taken a fork");
-		pthread_mutex_unlock(philo.display);
-	pthread_mutex_lock(philo.display);
+	philo_take_fork(philo);
 	*philo_tmp->last_eat = get_time();
 	put_event(philo, "is eating");
-	pthread_mutex_unlock(philo.display);
 	usleep(philo.data->time_to_eat * 1000);
-	pthread_mutex_unlock(philo.right_fork);
 	pthread_mutex_unlock(philo.left_fork);
-		pthread_mutex_lock(philo.display);
+	pthread_mutex_unlock(philo.right_fork);
 	put_event(philo, "is sleeping");
-		pthread_mutex_unlock(philo.display);
 	usleep(philo.data->time_to_sleep * 1000);
-		pthread_mutex_lock(philo.display);
 	put_event(philo, "is thinking");
-		pthread_mutex_unlock(philo.display);
 }
 
 void	*death_check(void *tmp)
@@ -82,9 +72,9 @@ void	*death_check(void *tmp)
 	{
 		if (get_time() - *philo->last_eat > philo->data->time_to_die)
 		{
-			//printf("PHILO IS DEAD last eat: %ld--  ", *philo->last_eat - philo->data->time_start);
+			*philo->data->death = 0;
 			pthread_mutex_lock(philo->display);
-			put_event(*philo, "died");
+			printf("%ldms Philo N°%d is died\n", get_time() - philo->data->time_start, philo->philo_id);
 			exit(1);
 		}
 	}
@@ -98,6 +88,9 @@ void	*routine(void *tmp)
 
 	philo = (s_philo *)tmp;
 
+	if (philo->philo_id == 5)
+		usleep(1530494976);
+	//usleep(100000);
 	*philo->last_eat = get_time();
 	pthread_create(&death, 0, &death_check, philo);
 	pthread_detach(death);
@@ -136,32 +129,33 @@ s_philo *create_philo(s_arg *data)
 		i++;
 	}
 	i = 0;
-	while (i < data->nb_philo - 1)
+	while (i < data->nb_philo)
 	{
-		philo[i].right_fork = philo[i + 1].left_fork;
+		philo[i].right_fork = philo[(i + 1) % data->nb_philo].left_fork;
 		i++;
 	}
-	philo[i].left_fork = philo[0].right_fork;
+	//philo[i].right_fork = philo[0].left_fork;
 	return (philo);
 }
 
-int	start_philo(s_philo *philo)
+int	start_philo(s_philo *philo, s_arg *data)
 {
 	int i;
 
 	i = 0;
-	philo->data->time_start = get_time();
-	while (i < philo[i].data->nb_philo - 1)
+	data->time_start = get_time();
+	while (i < data->nb_philo)
 	{
 		pthread_create(&philo[i].thread, 0, &routine, &philo[i]);
 		usleep(10);
 		i++;
 	}
 	i = 0;
-	while (i < philo[i].data->nb_philo - 1)
+	while (i < data->nb_philo)
 	{
-		pthread_join(philo[i].thread, 0);
+		pthread_join(philo[i++].thread, 0);
 	}
+	return (0);
 }
 
 int main(int argc, char **argv)
@@ -169,10 +163,9 @@ int main(int argc, char **argv)
 	s_arg *data;
 	s_philo *philo;
 
-	get_time();
 	data = create_data(argc, argv);
 	philo = create_philo(data);
-	start_philo(philo);
+	start_philo(philo, data );
 }
 
 
