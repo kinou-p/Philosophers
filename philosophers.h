@@ -20,6 +20,7 @@
 typedef struct s_list
 {
 	int				nb_philo;
+	int				nb_full_philo;
 	int				time_to_die;
 	int				time_to_eat;
 	int				time_to_sleep;

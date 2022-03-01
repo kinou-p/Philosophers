@@ -18,6 +18,7 @@ s_arg	*create_data(int argc, char **argv)
 
 	data = malloc(sizeof(s_arg));
 	*data->death = 1;
+	data->nb_full_philo = 0;
 	data->nb_philo = ft_atoi(argv[1]);
 	data->time_to_die = ft_atoi(argv[2]);
 	data->time_to_eat = ft_atoi(argv[3]);
@@ -27,7 +28,6 @@ s_arg	*create_data(int argc, char **argv)
 		data->must_eat = ft_atoi(argv[5]);
 	else
 		data->must_eat = -1;
-	//data->time_start = get_time();
 	return (data);
 }
 
@@ -41,9 +41,9 @@ void	put_event(s_philo philo, char *event)
 
 void	philo_take_fork(s_philo philo)
 {
-	pthread_mutex_lock(philo.right_fork);
+	pthread_mutex_lock(philo.left_fork);
 	put_event(philo, "has taken a fork");
-	pthread_mutex_lock(philo.left_fork);	
+	pthread_mutex_lock(philo.right_fork);	
 	put_event(philo, "has taken a fork");
 }
 
@@ -63,19 +63,30 @@ void	philo_eat(s_philo *philo_tmp)
 	put_event(philo, "is thinking");
 }
 
-void	*death_check(void *tmp)
+void	*death_checker(s_philo *philo, s_arg *data)
 {
-	s_philo	*philo;
+	int i;
 
-	philo = (s_philo *)tmp;
-	while (*philo->data->death)
+	i = 0;
+	while (1)
 	{
-		if (get_time() - *philo->last_eat > philo->data->time_to_die)
+		i = -1;
+		while (i++ < data->nb_philo - 1 && philo[i].data->death)
 		{
-			*philo->data->death = 0;
-			pthread_mutex_lock(philo->display);
-			printf("%ldms Philo N°%d is died\n", get_time() - philo->data->time_start, philo->philo_id);
-			exit(1);
+			if (get_time() - *philo[i].last_eat > data->time_to_die && philo[i].must_eat)
+			{
+				*philo[i].data->death = 0;
+				pthread_mutex_lock(philo->display);
+				printf("%ldms Philo N°%d is died\n", get_time() - data->time_start, philo[i].philo_id);
+				printf("End: one philo died\n");
+				exit(1);
+			}
+			else if (data->nb_full_philo == data->nb_philo)
+			{
+				pthread_mutex_lock(philo->display);
+				printf("End: all philo are full\n");
+				exit(1); 
+			}
 		}
 	}
 	return (0);
@@ -87,20 +98,16 @@ void	*routine(void *tmp)
 	pthread_t	death;
 
 	philo = (s_philo *)tmp;
-
-	if (philo->philo_id == 5)
-		usleep(1530494976);
-	//usleep(100000);
 	*philo->last_eat = get_time();
-	pthread_create(&death, 0, &death_check, philo);
-	pthread_detach(death);
-	while (1 && *philo->data->death && philo->must_eat)
+	//if (philo->philo_id % 2)
+	//	usleep(15000);
+	while (1 && *philo->data->death && philo->must_eat && philo->data->nb_full_philo != philo->data->nb_philo)
 	{
 		philo_eat(philo);
 		philo->must_eat--;
+		if (!philo->must_eat)
+			philo->data->nb_full_philo++;
 	}
-	if (!philo->must_eat)
-		printf("philo n%d is full\n", philo->philo_id);
 	return (0); 
 }
 
@@ -134,7 +141,6 @@ s_philo *create_philo(s_arg *data)
 		philo[i].right_fork = philo[(i + 1) % data->nb_philo].left_fork;
 		i++;
 	}
-	//philo[i].right_fork = philo[0].left_fork;
 	return (philo);
 }
 
@@ -150,6 +156,7 @@ int	start_philo(s_philo *philo, s_arg *data)
 		usleep(10);
 		i++;
 	}
+	death_checker(philo, data);
 	i = 0;
 	while (i < data->nb_philo)
 	{
@@ -158,14 +165,43 @@ int	start_philo(s_philo *philo, s_arg *data)
 	return (0);
 }
 
+int check_arg(int argc, char **argv)
+{
+	int i;
+	int j;
+
+	j= 0;
+	i = 1;
+	if (argc != 5 && argc != 6)
+		return (1);
+	while (argv[i])
+	{
+		j = 0;
+		while (argv[i][j])
+		{
+			if (argv[i][j] > '9' || argv[i][j] < '0')
+				return (1);
+			j++;
+		}
+		i++;
+	}
+	return (0);
+}
+
 int main(int argc, char **argv)
 {
 	s_arg *data;
 	s_philo *philo;
-
+	
+	if (check_arg(argc, argv))
+	{
+		printf("Bad arguments\n");
+		return (0);
+	}
 	data = create_data(argc, argv);
 	philo = create_philo(data);
 	start_philo(philo, data );
+	return (0);
 }
 
 
