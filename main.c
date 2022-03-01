@@ -31,6 +31,27 @@ s_arg	*create_data(int argc, char **argv)
 	return (data);
 }
 
+void	exit_philo(s_philo *philo, s_arg *data)
+{
+	int	i;
+
+	i = 0;
+	while (i < data->nb_philo - 1)
+	{
+		pthread_mutex_destroy(philo[i].left_fork);
+		free(philo[i].left_fork);
+		//pthread_
+		i++;
+	}
+	pthread_mutex_destroy(philo[i].left_fork);
+	free(philo[i].left_fork);
+	pthread_mutex_destroy(philo[i].display);
+	free(philo[i].display);
+	free(philo);
+	free(data);
+	exit(1);
+}
+
 void	put_event(s_philo philo, char *event)
 {
 	pthread_mutex_lock(philo.display);
@@ -79,13 +100,13 @@ void	*death_checker(s_philo *philo, s_arg *data)
 				pthread_mutex_lock(philo->display);
 				printf("%ldms Philo N°%d is died\n", get_time() - data->time_start, philo[i].philo_id);
 				printf("End: one philo died\n");
-				exit(1);
+				exit_philo(philo, data);
 			}
 			else if (data->nb_full_philo == data->nb_philo)
 			{
 				pthread_mutex_lock(philo->display);
 				printf("End: all philo are full\n");
-				exit(1); 
+				exit_philo(philo, data);
 			}
 		}
 	}
@@ -200,7 +221,7 @@ int main(int argc, char **argv)
 	}
 	data = create_data(argc, argv);
 	philo = create_philo(data);
-	start_philo(philo, data );
+	start_philo(philo, data);
 	return (0);
 }
 
