@@ -29,20 +29,20 @@ typedef struct s_list
 	int				must_eat;
 	long			time_start;
 	int				death[1];
-}				s_arg;
+}				t_arg;
 
 typedef struct t_list
 {
 	int				philo_id;
 	pthread_t		thread;
-	s_arg 			*data;
+	t_arg			*data;
 	int				must_eat;
 	long			last_eat[1];
 	pthread_mutex_t	*right_fork;
 	pthread_mutex_t	*left_fork;
 	pthread_mutex_t	*display;
 
-}				s_philo;
+}				t_philo;
 
 //utils fonctions
 long	ft_atoi(const char *nptr);

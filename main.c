@@ -12,12 +12,12 @@
 
 #include "philosophers.h"
 
-s_arg	*create_data(int argc, char **argv)
+t_arg	*create_data(int argc, char **argv)
 {
-	s_arg	*data;
+	t_arg	*data;
 
 	usleep(1500000);
-	data = malloc(sizeof(s_arg));
+	data = malloc(sizeof(t_arg));
 	*data->death = 1;
 	data->nb_full_philo = 0;
 	data->nb_philo = ft_atoi(argv[1]);
@@ -32,7 +32,7 @@ s_arg	*create_data(int argc, char **argv)
 	return (data);
 }
 
-void	exit_philo(s_philo *philo, s_arg *data)
+void	exit_philo(t_philo *philo, t_arg *data)
 {
 	int	i;
 
@@ -52,7 +52,7 @@ void	exit_philo(s_philo *philo, s_arg *data)
 	exit(1);
 }
 
-void	put_event(s_philo philo, char *event)
+void	put_event(t_philo philo, char *event)
 {
 	pthread_mutex_lock(philo.display);
 	if (*philo.data->death)
@@ -60,7 +60,7 @@ void	put_event(s_philo philo, char *event)
 	pthread_mutex_unlock(philo.display);
 }
 
-void	philo_take_fork(s_philo philo)
+void	philo_take_fork(t_philo philo)
 {
 	pthread_mutex_lock(philo.left_fork);
 	put_event(philo, "has taken a fork");
@@ -68,9 +68,9 @@ void	philo_take_fork(s_philo philo)
 	put_event(philo, "has taken a fork");
 }
 
-void	philo_eat(s_philo *philo_tmp)
+void	philo_eat(t_philo *philo_tmp)
 {
-	s_philo philo;
+	t_philo philo;
 
 	philo = *philo_tmp;
 	philo_take_fork(philo);
@@ -84,7 +84,7 @@ void	philo_eat(s_philo *philo_tmp)
 	put_event(philo, "is thinking");
 }
 
-void	*death_checker(s_philo *philo, s_arg *data)
+void	*death_checker(t_philo *philo, t_arg *data)
 {
 	int i;
 
@@ -117,9 +117,9 @@ void	*death_checker(s_philo *philo, s_arg *data)
 
 void	*routine(void *tmp)
 {
-	s_philo *philo;
+	t_philo *philo;
 
-	philo = (s_philo *)tmp;
+	philo = (t_philo *)tmp;
 	*philo->last_eat = get_time();
 	if (philo->philo_id % 2)
 		usleep(15000);
@@ -135,14 +135,14 @@ void	*routine(void *tmp)
 	return (0);
 }
 
-s_philo *create_philo(s_arg *data)
+t_philo *create_philo(t_arg *data)
 {
 	int i;
-	s_philo *philo;
+	t_philo *philo;
 	pthread_mutex_t	*display;
 
 	i = 0;
-	philo = malloc(sizeof(s_philo) * data->nb_philo);
+	philo = malloc(sizeof(t_philo) * data->nb_philo);
 	if (!philo)
 		return (0);
 	display = malloc(sizeof(pthread_mutex_t));
@@ -169,7 +169,7 @@ s_philo *create_philo(s_arg *data)
 	return (philo);
 }
 
-int	start_philo(s_philo *philo, s_arg *data)
+int	start_philo(t_philo *philo, t_arg *data)
 {
 	int i;
 
@@ -215,8 +215,8 @@ int check_arg(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-	s_arg *data;
-	s_philo *philo;
+	t_arg *data;
+	t_philo *philo;
 	
 	if (check_arg(argc, argv))
 	{
