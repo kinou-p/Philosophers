@@ -10,12 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-#include <unistd.h>
+#ifndef PHILOSOPHERS_H
+# define PHILOSOPHERS_H
 
+# include <pthread.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <sys/time.h>
+# include <unistd.h>
 
 typedef struct s_list
 {
@@ -45,3 +47,5 @@ typedef struct t_list
 //utils fonctions
 long	ft_atoi(const char *nptr);
 long	get_time(void);
+
+#endif

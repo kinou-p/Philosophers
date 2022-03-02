@@ -16,6 +16,7 @@ s_arg	*create_data(int argc, char **argv)
 {
 	s_arg	*data;
 
+	usleep(1500000);
 	data = malloc(sizeof(s_arg));
 	*data->death = 1;
 	data->nb_full_philo = 0;
@@ -40,7 +41,6 @@ void	exit_philo(s_philo *philo, s_arg *data)
 	{
 		pthread_mutex_destroy(philo[i].left_fork);
 		free(philo[i].left_fork);
-		//pthread_
 		i++;
 	}
 	pthread_mutex_destroy(philo[i].left_fork);
@@ -89,17 +89,19 @@ void	*death_checker(s_philo *philo, s_arg *data)
 	int i;
 
 	i = 0;
-	while (1)
+	while (*data->death)
 	{
 		i = -1;
-		while (i++ < data->nb_philo - 1 && philo[i].data->death)
+		while (i++ < data->nb_philo - 1 && *data->death && *philo[i].last_eat)
 		{
-			if (get_time() - *philo[i].last_eat > data->time_to_die && philo[i].must_eat)
+			if ((get_time() - *philo[i].last_eat) > data->time_to_die && philo[i].must_eat)
 			{
 				*philo[i].data->death = 0;
 				pthread_mutex_lock(philo->display);
-				printf("%ldms Philo N°%d is died\n", get_time() - data->time_start, philo[i].philo_id);
+				printf("%ldms Philo N°%d is died\n",
+					get_time() - data->time_start, philo[i].philo_id);
 				printf("End: one philo died\n");
+				printf("time_to_die: %d TIME: %ld start: %ld philo.start: %ld last_eat: %ld condition: %ld\n", data->time_to_die ,get_time(), data->time_start , philo[i].data->time_start, get_time() - *philo[i].last_eat ,get_time() - *philo[i].last_eat);
 				exit_philo(philo, data);
 			}
 			else if (data->nb_full_philo == data->nb_philo)
@@ -116,20 +118,21 @@ void	*death_checker(s_philo *philo, s_arg *data)
 void	*routine(void *tmp)
 {
 	s_philo *philo;
-	pthread_t	death;
 
 	philo = (s_philo *)tmp;
 	*philo->last_eat = get_time();
-	//if (philo->philo_id % 2)
-	//	usleep(15000);
-	while (1 && *philo->data->death && philo->must_eat && philo->data->nb_full_philo != philo->data->nb_philo)
+	if (philo->philo_id % 2)
+		usleep(15000);
+	while (*philo->data->death && philo->must_eat
+		&& philo->data->nb_full_philo != philo->data->nb_philo)
 	{
 		philo_eat(philo);
 		philo->must_eat--;
 		if (!philo->must_eat)
 			philo->data->nb_full_philo++;
 	}
-	return (0); 
+	printf("philo n%d return\n", philo->philo_id);
+	return (0);
 }
 
 s_philo *create_philo(s_arg *data)
@@ -148,6 +151,7 @@ s_philo *create_philo(s_arg *data)
 	pthread_mutex_init(display, 0);
 	while (i < data->nb_philo)
 	{
+		*philo[i].last_eat = 0; 
 		philo[i].display = display;
 		philo[i].philo_id = i + 1;
 		philo[i].data = data;
