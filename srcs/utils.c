@@ -45,3 +45,37 @@ long	get_time(void)
 	gettimeofday(&time, NULL);
 	return (time.tv_sec * 1000 + time.tv_usec / 1000);
 }
+
+void	put_event(t_arg *data, int philo_id, char *event)
+{
+	pthread_mutex_lock(&data->life_check);
+	pthread_mutex_lock(data->display);
+	if (data->death)
+		printf("%ldms Philo N°%d %s\n", get_time() - data->time_start,
+			philo_id, event);
+	pthread_mutex_unlock(data->display);
+	pthread_mutex_unlock(&data->life_check);
+}
+
+int	check_arg(int argc, char **argv)
+{
+	int	i;
+	int	j;
+
+	j = 0;
+	i = 1;
+	if (argc != 5 && argc != 6)
+		return (1);
+	while (argv[i])
+	{
+		j = 0;
+		while (argv[i][j])
+		{
+			if (argv[i][j] > '9' || argv[i][j] < '0')
+				return (1);
+			j++;
+		}
+		i++;
+	}
+	return (0);
+}

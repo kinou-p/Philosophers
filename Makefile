@@ -6,13 +6,16 @@
 #    By: apommier <apommier@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/02/13 16:27:49 by apommier          #+#    #+#              #
-#    Updated: 2022/03/05 18:52:44 by apommier         ###   ########.fr        #
+#    Updated: 2022/03/15 17:49:12 by apommier         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME	= philo
-SRCS	= main.c\
-			utils.c
+SRCS	= srcs/main.c\
+			srcs/init.c\
+			srcs/exit.c\
+			srcs/philo.c\
+			srcs/utils.c
 OBJS	= ${SRCS:.c=.o}
 CC		= gcc
 CFLAGS	= -pthread -Wall -Wextra -Werror
