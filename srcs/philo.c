@@ -26,51 +26,59 @@ void	philo_eat(t_philo *philo)
 	philo->last_eat = get_time();
 	pthread_mutex_unlock(&philo->eat_check);
 	usleep(data->time_to_eat * 1000);
-	philo->nb_eat++;
 	pthread_mutex_unlock(philo->left_fork);
 	pthread_mutex_unlock(philo->right_fork);
+	pthread_mutex_lock(&philo->check_nb_eat);
+	philo->nb_eat++;
+	pthread_mutex_unlock(&philo->check_nb_eat);
+}
+
+int	check_death(int i, t_philo *philo, t_arg *data, int *death)
+{
+	pthread_mutex_lock(&philo[i].eat_check);
+	if ((get_time() - philo[i].last_eat) > data->time_to_die)
+	{
+		pthread_mutex_unlock(&philo[i].eat_check);
+		put_event(data, philo[i].philo_id, "is died");
+		pthread_mutex_lock(&data->life_check);
+		data->death = 0;
+		pthread_mutex_unlock(&data->life_check);
+		*death = 0;
+		printf("End: one philo died\n");
+	}
+	else
+		pthread_mutex_unlock(&philo[i].eat_check);
+	usleep(100);
+	if (!(*death) || data->must_eat == -1)
+		return (0);
+	return (is_philo_full(philo, data));
 }
 
 void	death_checker(t_philo *philo, t_arg *data)
 {
 	int	i;
+	int	nb_full;
 	int	death;
 
 	death = 1;
 	while (!data->full_philo && death)
 	{
 		i = -1;
-		while (++i < data->nb_philo - 1 && death)
+		while (++i < data->nb_philo && death)
 		{
-			pthread_mutex_lock(&philo[i].eat_check);
-			if ((get_time() - philo[i].last_eat) > data->time_to_die)
+			nb_full = check_death(i, philo, data, &death);
+			if (nb_full == data->nb_philo)
 			{
-				put_event(data, philo[i].philo_id, "is died");
 				pthread_mutex_lock(&data->life_check);
 				data->death = 0;
-				pthread_mutex_unlock(&data->life_check);
 				death = 0;
-				printf("End: one philo died\n");
-				printf("time_to_die: %d TIME: %ld start: %ld philo.start: %ld last_eat: %ld condition: %ld\n", data->time_to_die ,get_time(), data->time_start , philo[i].data->time_start, get_time() - philo[i].last_eat ,get_time() - philo[i].last_eat);
-			}
-			pthread_mutex_unlock(&philo[i].eat_check);
-			usleep(100);
-			if (!death)
-				break ;
-			i = 0;
-			while (data->must_eat != -1 && i < data->nb_philo
-				&& philo[i].nb_eat >= data->must_eat)
-				i++;
-			if (i == data->nb_philo)
-			{
-				pthread_mutex_lock(&data->life_check);
-				data->death = 0;
 				data->full_philo = 1;
 				pthread_mutex_unlock(&data->life_check);
 				printf("End: all philo are full\n");
 			}
 		}
 	}
+	printf("return death\n");
 }
 
 void	*routine(void *tmp)
@@ -110,14 +118,13 @@ int	start_philo(t_philo *philo, t_arg *data)
 		i++;
 	}
 	death_checker(philo, data);
-	//printf("				after d_checker\n");
 	i = 0;
 	while (i < data->nb_philo)
 	{
-		//printf("i = %d philo %d\n", i, philo[i].philo_id);
+		printf("start join\n");
 		pthread_join(philo[i++].thread, 0);
+		printf("i de join= %d\n", i);
 	}
-//	printf("after join\n");
 	exit_philo(philo, data);
 	return (0);
 }

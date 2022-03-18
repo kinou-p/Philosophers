@@ -40,6 +40,7 @@ typedef struct t_list
 	t_arg			*data;
 	int				nb_eat;
 	long			last_eat;
+	pthread_mutex_t	check_nb_eat;
 	pthread_mutex_t	eat_check;
 	pthread_mutex_t	*right_fork;
 	pthread_mutex_t	*left_fork;
@@ -52,6 +53,7 @@ void	put_event(t_arg *data, int philo_id, char *event);
 t_philo	*create_philo(t_arg *data);
 t_arg	*create_data(int argc, char **argv);
 void	exit_philo(t_philo *philo, t_arg *data);
+int		is_philo_full(t_philo *philo, t_arg *data);
 
 //philo.c
 int		check_arg(int argc, char **argv);

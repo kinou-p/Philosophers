@@ -6,7 +6,7 @@
 /*   By: apommier <apommier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/15 17:38:58 by apommier          #+#    #+#             */
-/*   Updated: 2022/03/16 21:50:42 by apommier         ###   ########.fr       */
+/*   Updated: 2022/03/18 00:05:43 by apommier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,10 @@ t_arg	*create_data(int argc, char **argv)
 	pthread_mutex_t	*display;
 
 	display = malloc(sizeof(pthread_mutex_t));
-	if (!display)
+	data = malloc(sizeof(t_arg));
+	if (!display || !data)
 		return (0);
 	pthread_mutex_init(display, 0);
-	data = malloc(sizeof(t_arg));
 	pthread_mutex_init(&data->life_check, 0);
 	data->display = display;
 	data->death = 1;
@@ -54,15 +54,15 @@ t_philo	*create_philo(t_arg *data)
 		philo[i].data = data;
 		philo[i].nb_eat = 0;
 		philo[i].left_fork = malloc(sizeof(pthread_mutex_t));
+		if (!philo[i].left_fork)
+			return (0);
 		pthread_mutex_init(philo[i].left_fork, 0);
 		pthread_mutex_init(&philo[i].eat_check, 0);
+		pthread_mutex_init(&philo[i].check_nb_eat, 0);
 		i++;
 	}
-	i = 0;
-	while (i < data->nb_philo)
-	{
+	i = -1;
+	while (++i < data->nb_philo)
 		philo[i].right_fork = philo[(i + 1) % data->nb_philo].left_fork;
-		i++;
-	}
 	return (philo);
 }

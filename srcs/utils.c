@@ -77,5 +77,26 @@ int	check_arg(int argc, char **argv)
 		}
 		i++;
 	}
+	if (argv[1][0] == '0' || (argv[1][0] == '1' && !argv[1][1]))
+		return (1);
+	if (argc == 6 && argv[5][0] == '0')
+		return (1);
 	return (0);
+}
+
+int	is_philo_full(t_philo *philo, t_arg *data)
+{
+	int	nb_full;
+	int	i;
+
+	nb_full = 0;
+	i = -1;
+	while (++i < data->nb_philo)
+	{
+		pthread_mutex_lock(&philo[i].check_nb_eat);
+		if (philo[i].nb_eat >= data->must_eat)
+			nb_full++;
+		pthread_mutex_unlock(&philo[i].check_nb_eat);
+	}
+	return (nb_full);
 }
