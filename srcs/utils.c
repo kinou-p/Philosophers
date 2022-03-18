@@ -57,33 +57,6 @@ void	put_event(t_arg *data, int philo_id, char *event)
 	pthread_mutex_unlock(&data->life_check);
 }
 
-int	check_arg(int argc, char **argv)
-{
-	int	i;
-	int	j;
-
-	j = 0;
-	i = 1;
-	if (argc != 5 && argc != 6)
-		return (1);
-	while (argv[i])
-	{
-		j = 0;
-		while (argv[i][j])
-		{
-			if (argv[i][j] > '9' || argv[i][j] < '0')
-				return (1);
-			j++;
-		}
-		i++;
-	}
-	if (argv[1][0] == '0' || (argv[1][0] == '1' && !argv[1][1]))
-		return (1);
-	if (argc == 6 && argv[5][0] == '0')
-		return (1);
-	return (0);
-}
-
 int	is_philo_full(t_philo *philo, t_arg *data)
 {
 	int	nb_full;
